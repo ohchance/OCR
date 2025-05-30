@@ -1,3 +1,2 @@
-include ':app'
+include ':app',':opencv'
 rootProject.name = "OCR"
-include ':opencv'

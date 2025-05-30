@@ -12,6 +12,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
+import android.nfc.Tag
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
@@ -23,15 +24,26 @@ import timber.log.Timber
 import java.io.File
 import java.util.*
 import androidx.core.net.toUri
+import android.util.Log
 
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import org.opencv.android.Utils
+import org.opencv.android.OpenCVLoader
+import androidx.core.graphics.createBitmap
 
 const val TESSERACT_DOWNLOAD_FOLDER = "tesseract4/fast/"
+private const val TAG =  "OCR TEST"
 
 class OcrViewModel(application: Application) : BaseViewModel(application) {
+    companion object {
+        init {
+            System.loadLibrary("opencv_java4")
+            //System.loadLibrary("native-lib")
+        }
+    }
+
     val prefKey = application.getString(R.string.pref_tesseract_language_key)
 
     val preferences: SharedPreferences
@@ -67,13 +79,15 @@ class OcrViewModel(application: Application) : BaseViewModel(application) {
             2.0  // 하위 임계값 조정 (블록 내 평균값에 추가할 값)
         )
 
-        val resultBitmap = Bitmap.createBitmap(adaptiveThresholdMat.cols(), adaptiveThresholdMat.rows(), Bitmap.Config.ARGB_8888)
+        val resultBitmap = createBitmap(adaptiveThresholdMat.cols(), adaptiveThresholdMat.rows())
         Utils.matToBitmap(adaptiveThresholdMat, resultBitmap)
 
         return resultBitmap
     }
 
     fun runTextRecognition(uri: Uri) {
+        Log.d(TAG, "$uri")
+
         viewModelScope.launch {
             withContext(Dispatchers.Default) {
                 try {
